@@ -20,6 +20,16 @@ server.route({
   }
 });
 
+server.route({
+  method: 'POST',
+  path: '/bot/messenger/v1/webhook',
+  handler: function(request, reply) {
+    reply({
+      response: 'from POST'
+    });
+  }
+});
+
 server.start((err) => {
   if (err) {
       throw err;
