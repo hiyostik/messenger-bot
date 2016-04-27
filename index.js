@@ -12,7 +12,7 @@ server.route({
   method: 'GET',
   path: '/bot/messenger/v1/webhook',
   handler: function(request, reply) {
-    reply('Hello from the Messenger webhook');
+    reply('Hello from the Messenger webhook!');
   }
 });
 
