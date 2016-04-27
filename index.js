@@ -1,6 +1,7 @@
 'use strict';
 
 const Hapi = require('hapi');
+const keys = require('./.keys/facebook');
 
 const server = new Hapi.Server();
 server.connection({
@@ -12,7 +13,10 @@ server.route({
   method: 'GET',
   path: '/bot/messenger/v1/webhook',
   handler: function(request, reply) {
-    reply('Hello from the Messenger webhook!');
+    if (request.query['hub.verify_token'] === keys['verify_token']) {
+      return reply(request.query['hub.challenge']);
+    }
+    return reply('Error, wrong validation token');
   }
 });
 
