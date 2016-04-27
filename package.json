@@ -1,0 +1,22 @@
+{
+  "name": "messenger-bot",
+  "version": "1.0.0",
+  "description": "Yostik's Messenger Bot",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/hiyostik/messenger-bot.git"
+  },
+  "author": "Maxi Ferreira <charca@gmail.com>",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/hiyostik/messenger-bot/issues"
+  },
+  "homepage": "https://github.com/hiyostik/messenger-bot#readme",
+  "dependencies": {
+    "hapi": "^13.3.0"
+  }
+}
