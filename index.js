@@ -98,7 +98,6 @@ function parseQuery(query, config) {
               }],
             });
           }
-          console.log(cards);
           facebook.sendTextMessage(config, messages.GAME_FOUND);
           facebook.sendGenericTemplate(config, cards);
         } else {
