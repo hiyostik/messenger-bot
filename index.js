@@ -5,6 +5,7 @@ const bodyParser = require('body-parser');
 const keys = require('./.keys/facebook');
 const facebook = require('./src/facebook');
 const api = require('./src/api');
+const menus = require('./src/bot/menus');
 const messages = require('./src/constants/messages');
 
 const app = express();
@@ -90,16 +91,29 @@ function parseSearchGame(query) {
   const re = /(search (for)?|look (for|up)?|find (me)?)(.*)/i;
   const match = query.match(re);
   if (match !== null && match[5]) {
-    return getSearchObject(match[5].toLowerCase().trim());
+    return getSearchObject(match[5].trim());
   }
   return false;
 }
 
 function parseQuery(query, config) {
-  // Search Game
-  const searchObject = parseSearchGame(query);
+  const cleanQuery = query.toLowerCase().trim();
+  switch (cleanQuery) {
+    case 'help':
+      return menus.sendHelpMenu(config);
+    case 'watchlist':
+      return menus.sendWatchlist(config);
+    case 'unsubscribe':
+      return menus.sendUnsubscribeConfirmation(config);
+    default:
+      // Not a simple keyword, continue looking
+      break;
+  }
+
+  // Check if it's a game search
+  const searchObject = parseSearchGame(cleanQuery);
   if (searchObject !== false) {
-    api.search(searchObject.game.toLowerCase().trim(), searchObject.platform)
+    return api.search(searchObject.game.trim(), searchObject.platform)
       .then((json) => {
         const results = json.results;
         if (results.length > 0) {
