@@ -62,7 +62,7 @@ function sendMessage(config, messageData) {
     qs: { access_token: config['access_token'] },
     method: 'POST',
     json: {
-      recipient: { id: config.id },
+      recipient: { id: config['sender_id'] },
       message: messageData,
     }
   }, function(error, response, body) {
