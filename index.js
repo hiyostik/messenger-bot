@@ -31,6 +31,7 @@ app.post('/bot/messenger/v1/webhook', function (req, res) {
       parseQuery(event.message.text, config);
     }
     if (event.postback) {
+      console.log(event.postback);
       parsePostback(JSON.stringify(event.postback), config);
     }
   }
