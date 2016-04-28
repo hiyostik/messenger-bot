@@ -45,14 +45,29 @@ const platformsMap = {
   'playstation': 1,
   'playstation 4': 1,
   'playstation 3': 2,
-  'vita': 3
+  'vita': 3,
+  // xboxes
+  'pc': 7,
+  'windows': 7
 };
 
 const platformsIdMap = {
   1: 'PS4',
   2: 'PS3',
   3: 'PS Vita',
-  4: 'PSP'
+  4: 'PSP',
+  5: 'Xbox One',
+  6: 'Xbox 360',
+  7: 'PC',
+  8: 'Mac',
+  9: 'Linux'
+};
+
+const storesMap = {
+  1: 'PlayStation Store',
+  2: 'Steam',
+  3: 'Amazon.com',
+  4: 'Gog.com'
 };
 
 function getSearchObject(query) {
@@ -137,7 +152,7 @@ function searchDeal(searchObject, config) {
           const lowestPrice = deal.deal_price || deal.normal_price;
           cards.push({
             'title': deal.title,
-            'subtitle': `${platformsIdMap[deal.platform_id]} | \$${lowestPrice}\nPlayStation Store`,
+            'subtitle': `${platformsIdMap[deal.platform_id]} | \$${lowestPrice}\n${storesMap[deal.store_id]}`,
             'image_url': deal.image_url || 'https://yostikapp.com/site/images/yostik_full_logo.png',
             'buttons': [{
               'type': 'web_url',
