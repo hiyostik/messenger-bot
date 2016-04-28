@@ -30,8 +30,7 @@ app.post('/bot/messenger/v1/webhook', function (req, res) {
       parseQuery(event.message.text, config);
     }
     if (event.postback) {
-      const text = JSON.stringify(event.postback);
-      facebook.sendTextMessage(config, 'Postback received: ' + text.substring(0, 200));
+      parsePostback(JSON.stringify(event.postback), config);
     }
   }
   return res.sendStatus(200);
@@ -40,11 +39,19 @@ app.post('/bot/messenger/v1/webhook', function (req, res) {
 const platformsMap = {
   'PS4': 1,
   'PS3': 2,
+  'PS Vita': 3,
+  'PSP': 4,
+  'playstation': 1,
+  'playstation 4': 1,
+  'playstation 3': 2,
+  'vita': 3
 };
 
 const platformsIdMap = {
   1: 'PS4',
-  2: 'PS3'
+  2: 'PS3',
+  3: 'PS Vita',
+  4: 'PSP'
 };
 
 function getSearchObject(query) {
@@ -60,6 +67,23 @@ function getSearchObject(query) {
     game: query,
     platform: false
   };
+}
+
+function parsePostback(text, config) {
+  let match;
+  match = text.match(/ADD_TO_WATCHLIST_(\d+)/i);
+  if (match && match[1]) {
+    // Look for game_id
+    // Save in watchlist table
+    // Respond
+    const gameName = match[1];
+    return facebook.sendTextMessage(config, messages.LET_YOU_KNOW(gameName));
+  }
+
+  match = text.match(/RETRY_SEARCH_FOR_QUERY_(\d+)/i);
+  if (match && match[1]) {
+    return parseQuery(`search ${match[1]}`, config);
+  }
 }
 
 function parseSearchGame(query) {
@@ -84,17 +108,17 @@ function parseQuery(query, config) {
             const deal = results[i];
             const lowestPrice = deal.deal_price || deal.normal_price;
             cards.push({
-              "title": deal.title,
-              "subtitle": `${platformsIdMap[deal.platform_id]} | \$${lowestPrice}\nPlayStation Store`,
-              "image_url": deal.image_url,
-              "buttons": [{
-                "type": "web_url",
-                "url": deal.url,
-                "title": "Get this deal"
+              'title': deal.title,
+              'subtitle': `${platformsIdMap[deal.platform_id]} | \$${lowestPrice}\nPlayStation Store`,
+              'image_url': deal.image_url || 'https://yostikapp.com/site/images/yostik_full_logo.png',
+              'buttons': [{
+                'type': 'web_url',
+                'title': 'Get this deal',
+                'url': deal.url
               }, {
-                "type": "postback",
-                "title": "Notify me at lower price",
-                "payload": 'NOTIFY_ME_AT_LOWER_PRICE_' + deal.game_id,
+                'type': 'postback',
+                'title': 'Add to watchlist',
+                'payload': 'ADD_TO_WATCHLIST_' + deal.game_id,
               }],
             });
           }
