@@ -59,13 +59,13 @@ function getSearchObject(query) {
   for (var key in platformsMap) {
     if (query.indexOf(key.toLowerCase()) !== -1) {
       return {
-        game: query.replace(new RegExp(`(for )?${key}`, 'i'), ''),
+        game: query.replace(new RegExp(`(for )?${key}`, 'i'), '').trim(),
         platform: platformsMap[key]
       }
     }
   }
   return {
-    game: query,
+    game: query.trim(),
     platform: false
   };
 }
@@ -81,7 +81,7 @@ function parsePostback(text, config) {
     return facebook.sendTextMessage(config, messages.LET_YOU_KNOW(gameName));
   }
 
-  match = text.match(/RETRY_SEARCH_FOR_QUERY_(\d+)/i);
+  match = text.match(/RETRY_SEARCH_FOR_QUERY_(.+)/i);
   if (match && match[1]) {
     return parseQuery(`search ${match[1]}`, config);
   }
@@ -127,7 +127,7 @@ function parseQuery(query, config) {
 };
 
 function searchDeal(searchObject, config) {
-  return api.search(searchObject.game.trim(), searchObject.platform)
+  return api.search(searchObject.game, searchObject.platform)
     .then((json) => {
       const results = json.results;
       if (results.length > 0) {
