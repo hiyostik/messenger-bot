@@ -110,52 +110,62 @@ function parseQuery(query, config) {
       break;
   }
 
+  let searchObject;
   // Check if it's a game search
-  const searchObject = parseSearchGame(cleanQuery);
+  searchObject = parseSearchGame(cleanQuery);
   if (searchObject !== false) {
-    return api.search(searchObject.game.trim(), searchObject.platform)
-      .then((json) => {
-        const results = json.results;
-        if (results.length > 0) {
-          let cards = [];
-          for(let i = 0; i < results.length; i += 1) {
-            const deal = results[i];
-            const lowestPrice = deal.deal_price || deal.normal_price;
-            cards.push({
-              'title': deal.title,
-              'subtitle': `${platformsIdMap[deal.platform_id]} | \$${lowestPrice}\nPlayStation Store`,
-              'image_url': deal.image_url || 'https://yostikapp.com/site/images/yostik_full_logo.png',
-              'buttons': [{
-                'type': 'web_url',
-                'title': 'Get this deal',
-                'url': deal.url
-              }, {
-                'type': 'postback',
-                'title': 'Add to watchlist',
-                'payload': 'ADD_TO_WATCHLIST_' + deal.game_id,
-              }],
-            });
-          }
-          facebook.sendTextMessage(config, messages.GAME_FOUND);
-          facebook.sendGenericTemplate(config, cards);
-        } else {
-          if(searchObject.platform) {
-            const button = {
-              'type': 'postback',
-              'title': messages.TRY_ANOTHER_PLATFORM,
-              'payload': 'RETRY_SEARCH_FOR_QUERY_' + searchObject.game
-            };
-            facebook.sendButtonMessage(config, messages.GAME_NOT_FOUND + searchObject.game + ' for ' + platformsIdMap[searchObject.platform], [button]);
-          } else {
-            facebook.sendTextMessage(config, messages.GAME_NOT_FOUND + searchObject.game);
-          }
-        }
-      });
-  } else {
-    // TODO: Search if Query is Game
-    facebook.sendTextMessage(config, messages.UNRECOGNIZED_QUERY);
+    return searchDeal(searchObject, config);
   }
+
+  // Check if it's an implicit game search
+  searchObject = parseSearchGame(`search ${cleanQuery}`);
+  if (searchObject !== false) {
+    return searchDeal(searchObject, config);
+  }
+
+  return facebook.sendTextMessage(config, messages.UNRECOGNIZED_QUERY);
 };
+
+function searchDeal(searchObject, config) {
+  return api.search(searchObject.game.trim(), searchObject.platform)
+    .then((json) => {
+      const results = json.results;
+      if (results.length > 0) {
+        let cards = [];
+        for(let i = 0; i < results.length; i += 1) {
+          const deal = results[i];
+          const lowestPrice = deal.deal_price || deal.normal_price;
+          cards.push({
+            'title': deal.title,
+            'subtitle': `${platformsIdMap[deal.platform_id]} | \$${lowestPrice}\nPlayStation Store`,
+            'image_url': deal.image_url || 'https://yostikapp.com/site/images/yostik_full_logo.png',
+            'buttons': [{
+              'type': 'web_url',
+              'title': 'Get this deal',
+              'url': deal.url
+            }, {
+              'type': 'postback',
+              'title': 'Add to watchlist',
+              'payload': 'ADD_TO_WATCHLIST_' + deal.game_id,
+            }],
+          });
+        }
+        facebook.sendTextMessage(config, messages.GAME_FOUND);
+        facebook.sendGenericTemplate(config, cards);
+      } else {
+        if(searchObject.platform) {
+          const button = {
+            'type': 'postback',
+            'title': messages.TRY_ANOTHER_PLATFORM,
+            'payload': 'RETRY_SEARCH_FOR_QUERY_' + searchObject.game
+          };
+          facebook.sendButtonMessage(config, messages.GAME_NOT_FOUND + searchObject.game + ' for ' + platformsIdMap[searchObject.platform], [button]);
+        } else {
+          facebook.sendTextMessage(config, messages.GAME_NOT_FOUND + searchObject.game);
+        }
+      }
+    });
+}
 
 app.listen(8123, '0.0.0.0', function () {
   console.log('Facebook Messenger bot started on port 8123');
