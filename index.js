@@ -4,6 +4,7 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const keys = require('./.keys/facebook');
 const facebook = require('./src/facebook');
+const api = require('./src/api');
 const messages = require('./src/constants/messages');
 
 const app = express();
@@ -74,23 +75,45 @@ function parseQuery(query, config) {
   // Search Game
   const searchObject = parseSearchGame(query);
   if (searchObject !== false) {
-    // TODO: Request search
-    const results = [];
-    if (results.length > 0) {
-      facebook.sendTextMessage(config, 'found something!');
-    } else {
-      console.log(searchObject);
-      if(searchObject.platform) {
-        const button = {
-          'type': 'postback',
-          'title': 'Try other platform',
-          'payload': 'RETRY_SEARCH_FOR_QUERY_' + searchObject.game
-        };
-        facebook.sendButtonMessage(config, messages.GAME_NOT_FOUND + searchObject.game + ' for ' + platformsIdMap[searchObject.platform], [button]);
-      } else {
-        facebook.sendTextMessage(config, messages.GAME_NOT_FOUND + searchObject.game);
-      }
-    }
+    api.search(searchObject.game.toLowerCase().trim(), searchObject.platform)
+      .then((json) => {
+        const results = json.results;
+        if (results.length > 0) {
+          let cards = [];
+          for(let i = 0; i < results.length; i += 1) {
+            const deal = results[i];
+            const lowestPrice = deal.deal_price || deal.normal_price;
+            cards.push({
+              "title": deal.title,
+              "subtitle": `${platformsIdMap[deal.platform_id]} | \$${lowestPrice}\nPlayStation Store`,
+              "image_url": deal.image_url,
+              "buttons": [{
+                "type": "web_url",
+                "url": deal.url,
+                "title": "Get this deal"
+              }, {
+                "type": "postback",
+                "title": "Notify me at lower price",
+                "payload": 'NOTIFY_ME_AT_LOWER_PRICE_' + deal.game_id,
+              }],
+            });
+          }
+          console.log(cards);
+          facebook.sendTextMessage(config, messages.GAME_FOUND);
+          facebook.sendGenericTemplate(config, cards);
+        } else {
+          if(searchObject.platform) {
+            const button = {
+              'type': 'postback',
+              'title': messages.TRY_ANOTHER_PLATFORM,
+              'payload': 'RETRY_SEARCH_FOR_QUERY_' + searchObject.game
+            };
+            facebook.sendButtonMessage(config, messages.GAME_NOT_FOUND + searchObject.game + ' for ' + platformsIdMap[searchObject.platform], [button]);
+          } else {
+            facebook.sendTextMessage(config, messages.GAME_NOT_FOUND + searchObject.game);
+          }
+        }
+      });
   } else {
     // TODO: Search if Query is Game
     facebook.sendTextMessage(config, messages.UNRECOGNIZED_QUERY);
