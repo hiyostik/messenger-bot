@@ -84,10 +84,7 @@ function parseQuery(query, config) {
         const button = {
           'type': 'postback',
           'title': 'Try other platform',
-          'payload': {
-            'type': 'RETRY_SEARCH',
-            'query': searchObject.game
-          }
+          'payload': 'RETRY_SEARCH_FOR_QUERY_' + searchObject.game
         };
         facebook.sendButtonMessage(config, messages.GAME_NOT_FOUND + searchObject.game + ' for ' + platformsIdMap[searchObject.platform], [button]);
       } else {
