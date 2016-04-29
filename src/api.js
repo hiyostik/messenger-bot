@@ -10,6 +10,12 @@ const search = (title, platform, limit) => {
   return fetch(url).then((res) => res.json());
 }
 
+const logMessage = (messageEvent) => {
+  let url = `http://localhost:8000/api/v1/logmessage`;
+  return fetch(url, { method: 'POST', body: JSON.stringify(messageEvent) }).then((res) => res.json());
+}
+
 module.exports = {
-  search
+  search,
+  logMessage
 };

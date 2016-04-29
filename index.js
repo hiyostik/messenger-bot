@@ -27,10 +27,22 @@ app.post('/bot/messenger/v1/webhook', function (req, res) {
       sender_id: event.sender.id,
       access_token: keys.access_token
     };
+    const messageEvent = {
+      messenger_platform_id: 1,
+      external_user_id: config.sender_id,
+    };
     if (event.message && event.message.text) {
+      messageEvent.external_message_id = event.message.mid;
+      messageEvent.type = 'message';
+      messageEvent.text = event.message.text;
+      logMessage(messageEvent);
       parseQuery(event.message.text, config);
     }
     if (event.postback && event.postback.payload) {
+      messageEvent.external_message_id = 'pid.' + event.timestamp; // Making this up, there's no ID for a postback
+      messageEvent.type = 'postback';
+      messageEvent.text = event.postback.payload;
+      logMessage(messageEvent);
       parsePostback(event.postback.payload, config);
     }
   }
@@ -79,6 +91,10 @@ const storesMap = {
   5: 'Humble Store',
   6: 'WinGameStore'
 };
+
+function logMessage(messageEvent) {
+  return api.logMessage(messageEvent);
+}
 
 function getSearchObject(query) {
   for (var key in platformsMap) {
