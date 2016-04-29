@@ -160,7 +160,7 @@ function searchDeal(searchObject, config) {
         for(let i = 0; i < results.length; i += 1) {
           const deal = results[i];
           const lowestPrice = deal.deal_price || deal.normal_price;
-          let price = `\$${lowestPrice}`;
+          let price = `\$${Number.toFixed(lowestPrice, 2)}`;
           price += (deal.discount_percent) ? ` | ${deal.discount_percent}% OFF!` : '';
           cards.push({
             'title': deal.title,
