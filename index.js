@@ -46,7 +46,15 @@ const platformsMap = {
   'playstation 4': 1,
   'playstation 3': 2,
   'vita': 3,
-  // xboxes
+  'xbox': 5,
+  'xbox one': 5,
+  'xbox 1': 5,
+  'xone': 5,
+  'xboxone': 5,
+  'xbox 360': 6,
+  'xbox360': 6,
+  'x360': 6,
+  '360': 6,
   'pc': 7,
   'windows': 7
 };
