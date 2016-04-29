@@ -158,9 +158,11 @@ function searchDeal(searchObject, config) {
         for(let i = 0; i < results.length; i += 1) {
           const deal = results[i];
           const lowestPrice = deal.deal_price || deal.normal_price;
+          let price = `\$${lowestPrice}`;
+          price += (deal.discount_percent) ? ` ${deal.discount_percent}% OFF!` : '';
           cards.push({
             'title': deal.title,
-            'subtitle': `${platformsIdMap[deal.platform_id]} | \$${lowestPrice}\n${storesMap[deal.store_id]}`,
+            'subtitle': `${platformsIdMap[deal.platform_id]} | ${price}\n${storesMap[deal.store_id]}`,
             'image_url': deal.image_url || 'https://yostikapp.com/site/images/yostik_full_logo.png',
             'buttons': [{
               'type': 'web_url',
