@@ -75,7 +75,9 @@ const storesMap = {
   1: 'PlayStation Store',
   2: 'Steam',
   3: 'Amazon.com',
-  4: 'Gog.com'
+  4: 'Gog.com',
+  5: 'Humble Store',
+  6: 'WinGameStore'
 };
 
 function getSearchObject(query) {
