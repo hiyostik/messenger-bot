@@ -159,7 +159,7 @@ function searchDeal(searchObject, config) {
           const deal = results[i];
           const lowestPrice = deal.deal_price || deal.normal_price;
           let price = `\$${lowestPrice}`;
-          price += (deal.discount_percent) ? ` ${deal.discount_percent}% OFF!` : '';
+          price += (deal.discount_percent) ? ` | ${deal.discount_percent}% OFF!` : '';
           cards.push({
             'title': deal.title,
             'subtitle': `${platformsIdMap[deal.platform_id]} | ${price}\n${storesMap[deal.store_id]}`,
