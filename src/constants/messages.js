@@ -4,10 +4,6 @@ module.exports = {
   GAME_FOUND: 'Ok, here\'s what I found',
   TRY_ANOTHER_PLATFORM: 'Try another platform',
   LET_YOU_KNOW: (name) => `Alright, boss. I'll let you know when ${name} drops its price.`,
-  HELP_MENU: `Here's what I can do for you:\n
-    - SEARCH for a game, I'll find the best prices and tell you where you can buy them.
-    You can also limit your search to a specific platform or console. Example: "search witcher 3 for ps4", or "find banner saga for pc".\n
-    - WATCHLIST will show you the list of games you're currently watching for better prices. You can search for the current lowest price,
-    or unwatch a game here.`,
+  HELP_MENU: `Just type the name of the game you're looking for, you can also add the name of the platform or console to filter the results. For example "search call of duty for ps4" or "destiny for xbox".`,
   SUCCESSFUL_UNSUBSCRIBE: `I'll stop sending you the weekly deals. If you want to subscribe again, just send SUBSCRIBE.`
 };
