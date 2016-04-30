@@ -123,8 +123,8 @@ function parsePostback(text, config) {
       low_price: match[3]
     };
     return api.addToWatchlist(watchlistItem)
-      .then((item) => {
-        return facebook.sendTextMessage(config, messages.LET_YOU_KNOW(item.game_name.substr(0, 150)));
+      .then((response) => {
+        return facebook.sendTextMessage(config, messages.LET_YOU_KNOW(response.item.game_name.substr(0, 150)));
       })
       .catch((err) => console.log(err));
   }
