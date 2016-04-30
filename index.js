@@ -116,7 +116,7 @@ function parsePostback(text, config) {
   match = text.match(/ADD_TO_WATCHLIST_(\d+)_(\d+)_(.+)/i);
   if (match && match[1] && match[2] && match[3]) {
     const watchlistItem = {
-      messenger_platform_id: 1
+      messenger_platform_id: 1,
       external_user_id: config.sender_id,
       game_id: match[1],
       platform_id: match[2],
