@@ -124,7 +124,8 @@ function parsePostback(text, config) {
     };
     return api.addToWatchlist(watchlistItem)
       .then((response) => {
-        return facebook.sendTextMessage(config, messages.LET_YOU_KNOW(response.item.game_name.substr(0, 150)));
+        const messageConstructor = (response.action === 'watchlist_item_updated') ? messages.REMIND_YOU : messages.LET_YOU_KNOW;
+        return facebook.sendTextMessage(config, messageConstructor(response.item.game_name.substr(0, 150)));
       })
       .catch((err) => console.log(err));
   }
@@ -146,8 +147,28 @@ function parseSearchGame(query) {
 
 function parseQuery(query, config) {
   const cleanQuery = query.toLowerCase().trim();
-  switch (cleanQuery) {
-    case 'help':
+  const cleanAndNormalizedQuery = str.replace(/[^a-zA-Z0-9]+/g, '');
+  switch (cleanAndNormalizedQuery) {
+    case 'hello': case 'hey': case 'hi':
+    case 'helloyostik': case 'heyyostik': case 'hiyostik':
+      return menus.randomGreeting(config);
+    case 'thanks': case 'thankyou': case 'ty':
+    case 'thanksyostik': case 'thankyouyostik': case 'tyyostik':
+    case 'yourethebest': case 'yourthebest':
+      return menus.randomYoureWelcome(config);
+    case 'iloveyou': case 'iloveu':
+    case 'iloveyouyostik': case 'iloveuyostik':
+      return menus.randomLove(config, 'love');
+    case 'ilikeyou': case 'ilikeu':
+    case 'ilikeyouyostik': case 'ilikeuyostik':
+      return menus.randomLove(config, 'like');
+    case 'marryme': case 'marrymeyostik':
+      return menus.randomLove(config, 'marry');
+    case 'ihateyou': case 'ihateu': case 'yousuck': case 'usuck':
+    case 'ihateyouyostik': case 'ihateuyostik': case 'yousuckyostik': case 'usuckyostik':
+    case 'fuckyou': case 'fucku': case 'fuckyouyostik': case 'fuckuyostik':
+      return menus.randomHate(config);
+    case 'help': case 'helpme': case 'helpmeyostik': case 'ineedhelp':
       return menus.sendHelpMenu(config);
     case 'watchlist':
       return menus.sendWatchlist(config);
