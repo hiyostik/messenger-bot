@@ -11,11 +11,17 @@ const search = (title, platform, limit) => {
 }
 
 const logMessage = (messageEvent) => {
-  let url = `http://localhost:8000/api/v1/logmessage`;
+  const url = `http://localhost:8000/api/v1/logmessage`;
   return fetch(url, { method: 'POST', body: JSON.stringify(messageEvent) }).then((res) => res.json());
+}
+
+const addToWatchlist = (watchlistItem) => {
+  const url = `http://localhost:8000/api/v1/watchlist`;
+  return fetch(url, { method: 'POST', body: JSON.stringify(watchlistItem) }).then((res) => res.json());
 }
 
 module.exports = {
   search,
-  logMessage
+  logMessage,
+  addToWatchlist
 };

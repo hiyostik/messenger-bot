@@ -113,13 +113,20 @@ function getSearchObject(query) {
 
 function parsePostback(text, config) {
   let match;
-  match = text.match(/ADD_TO_WATCHLIST_(\d+)/i);
-  if (match && match[1]) {
-    // Look for game_id
-    // Save in watchlist table
-    // Respond
-    const gameName = match[1];
-    return facebook.sendTextMessage(config, messages.LET_YOU_KNOW(gameName));
+  match = text.match(/ADD_TO_WATCHLIST_(\d+)_(\d+)_(.+)/i);
+  if (match && match[1] && match[2] && match[3]) {
+    const watchlistItem = {
+      messenger_platform_id: 1
+      external_user_id: config.sender_id,
+      game_id: match[1],
+      platform_id: match[2],
+      low_price: match[3]
+    };
+    return api.addToWatchlist(watchlistItem)
+      .then((item) => {
+        return facebook.sendTextMessage(config, messages.LET_YOU_KNOW(item.game_name.substr(0, 150)));
+      })
+      .catch((err) => console.log(err));
   }
 
   match = text.match(/RETRY_SEARCH_FOR_QUERY_(.+)/i);
@@ -188,8 +195,8 @@ function searchDeal(searchObject, config) {
               'url': deal.url
             }, {
               'type': 'postback',
-              'title': 'Add to watchlist',
-              'payload': 'ADD_TO_WATCHLIST_' + deal.game_id,
+              'title': 'Watch for price drop',
+              'payload': 'ADD_TO_WATCHLIST_' + deal.game_id + '_' + deal.platform_id + '_' + lowestPrice,
             }],
           });
         }
