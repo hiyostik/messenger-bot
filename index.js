@@ -147,7 +147,7 @@ function parseSearchGame(query) {
 
 function parseQuery(query, config) {
   const cleanQuery = query.toLowerCase().trim();
-  const cleanAndNormalizedQuery = str.replace(/[^a-zA-Z0-9]+/g, '');
+  const cleanAndNormalizedQuery = cleanQuery.replace(/[^a-zA-Z0-9]+/g, '');
   switch (cleanAndNormalizedQuery) {
     case 'hello': case 'hey': case 'hi':
     case 'helloyostik': case 'heyyostik': case 'hiyostik':
