@@ -49,6 +49,53 @@ app.post('/bot/messenger/v1/webhook', function (req, res) {
   return res.sendStatus(200);
 });
 
+app.post('/bot/messenger/v1/notify/:id', function (req, res) {
+  const json = req.body;
+  const config = {
+    sender_id: req.params.id,
+    access_token: keys.access_token
+  };
+
+  if (json && json.length) {
+    const msg = (json.length > 1) ? 'WATCHLIST_NOTIFICATION_MULTIPLE' : 'WATCHLIST_NOTIFICATION_SINGLE';
+    const limit = (json.length > 10) ? 10 : json.length;
+    let cards = [];
+    let watchlistItems = [];
+    for(let i = 0; i < limit; i += 1) {
+      const deal = json[i];
+      const lowestPrice = deal.lowest_price;
+      let price = `\$${parseFloat(lowestPrice).toFixed(2)}`;
+      price += (deal.discount_percent) ? ` | ${deal.discount_percent}% OFF!` : '';
+      cards.push({
+        'title': deal.title,
+        'subtitle': `${platformsIdMap[deal.platform_id]} | ${price}\n${storesMap[deal.store_id]}`,
+        'image_url': deal.image_url || 'https://yostikapp.com/site/images/yostik_full_logo.png',
+        'buttons': [{
+          'type': 'web_url',
+          'title': 'Get this deal',
+          'url': deal.url
+        }, {
+          'type': 'postback',
+          'title': 'Stop watching',
+          'payload': 'STOP_WATCHING_' + deal.watchlist_id,
+        }],
+      });
+      watchlistItems.push({
+        id: deal.watchlist_id,
+        low_price: lowestPrice
+      });
+    }
+    facebook.sendTextMessage(config, messages[msg]);
+    facebook.sendGenericTemplate(config, cards);
+    return res.send({
+      success: true,
+      watchlist_items: watchlistItems
+    });
+  }
+
+  return res.status(500).send({ error: 'No notifications found' })
+});
+
 const platformsMap = {
   'PS4': 1,
   'PS3': 2,
