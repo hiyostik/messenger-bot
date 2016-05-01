@@ -177,6 +177,15 @@ function parsePostback(text, config) {
       .catch((err) => console.log(err));
   }
 
+  match = text.match(/STOP_WATCHING_(\d+)/i);
+  if (match && match[1]) {
+    return api.removeFromWatchlist({ id: match[1] })
+      .then((response) => {
+        return facebook.sendTextMessage(config, messages.CONFIRM_STOP_WATCHING);
+      })
+      .catch((err) => console.log(err));
+  }
+
   match = text.match(/RETRY_SEARCH_FOR_QUERY_(.+)/i);
   if (match && match[1]) {
     return parseQuery(`search ${match[1]}`, config);

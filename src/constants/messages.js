@@ -9,6 +9,7 @@ module.exports = {
   SUCCESSFUL_UNSUBSCRIBE: `I'll stop sending you the weekly deals. If you want to subscribe again, just send SUBSCRIBE.`,
   WATCHLIST_NOTIFICATION_SINGLE: `Hey there! A game in your watchlist just dropped its price, take a look:`,
   WATCHLIST_NOTIFICATION_MULTIPLE: `Hey there! Some games in your watchlist just dropped their price, take a look:`,
+  CONFIRM_STOP_WATCHING: `Got it. I'll stop sending you price drop notifications for this game.`,
   GREETING1: `Hey there!`,
   GREETING2: `Hello hello! What can I do for you today?`,
   GREETING3: `Hi friend! What do you want to play today?`,

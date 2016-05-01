@@ -20,6 +20,11 @@ const addToWatchlist = (watchlistItem) => {
   return fetch(url, { method: 'POST', body: JSON.stringify(watchlistItem) }).then((res) => res.json());
 }
 
+const removeFromWatchlist = (watchlistItem) => {
+  const url = `http://localhost:8000/api/v1/watchlist`;
+  return fetch(url, { method: 'DELETE', body: JSON.stringify(watchlistItem) }).then((res) => res.json());
+}
+
 module.exports = {
   search,
   logMessage,
