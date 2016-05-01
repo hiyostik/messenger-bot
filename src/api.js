@@ -28,5 +28,6 @@ const removeFromWatchlist = (watchlistItem) => {
 module.exports = {
   search,
   logMessage,
-  addToWatchlist
+  addToWatchlist,
+  removeFromWatchlist
 };
