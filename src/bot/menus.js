@@ -15,7 +15,7 @@ const sendWatchlist = (config) => {
   return api.getWatchlist(config.sender_id).then((json) => {
     const results = json.results;
     if (results.length > 0) {
-      const limit = (json.length > 10) ? 10 : json.length;
+      const limit = (results.length > 10) ? 10 : results.length;
       let cards = [];
       for(let i = 0; i < limit; i += 1) {
         const item = results[i];
