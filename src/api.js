@@ -25,9 +25,15 @@ const removeFromWatchlist = (watchlistItem) => {
   return fetch(url, { method: 'POST', body: JSON.stringify(watchlistItem) }).then((res) => res.json());
 }
 
+const getWatchlist = (userId) => {
+  const url = `http://localhost:8000/api/v1/watchlist/1/${userId}`;
+  return fetch(url, { method: 'GET' }).then((res) => res.json());
+}
+
 module.exports = {
   search,
   logMessage,
   addToWatchlist,
-  removeFromWatchlist
+  removeFromWatchlist,
+  getWatchlist
 };

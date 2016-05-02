@@ -77,7 +77,7 @@ app.post('/bot/messenger/v1/notify/:id', function (req, res) {
         }, {
           'type': 'postback',
           'title': 'Stop watching',
-          'payload': 'STOP_WATCHING_' + deal.watchlist_id,
+          'payload': 'STOP_WATCHING_' + deal.watchlist_id
         }],
       });
       watchlistItems.push({
@@ -226,10 +226,9 @@ function parseQuery(query, config) {
       return menus.randomHate(config);
     case 'help': case 'helpme': case 'helpmeyostik': case 'ineedhelp':
       return menus.sendHelpMenu(config);
-    case 'watchlist':
+    case 'watchlist': case 'unsubscribe': case 'stop':
       return menus.sendWatchlist(config);
-    case 'unsubscribe':
-      return menus.sendUnsubscribeConfirmation(config);
+      // return menus.sendUnsubscribeConfirmation(config);
     default:
       // Not a simple keyword, continue looking
       break;

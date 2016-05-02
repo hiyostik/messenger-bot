@@ -1,4 +1,7 @@
+'use strict';
+
 const _ = require('lodash');
+const api = require('../api');
 const facebook = require('../facebook');
 const messages = require('../constants/messages');
 
@@ -9,7 +12,29 @@ const sendHelpMenu = (config) => {
 const sendWatchlist = (config) => {
   // Get watchlist from DB
   // Send generic template with buttons to unwatch
-  facebook.sendTextMessage(config, 'TODO: Watchlist');
+  return api.getWatchlist(config.sender_id).then((json) => {
+    const results = json.results;
+    if (results.length > 0) {
+      let cards = [];
+      for(let i = 0; i < results.length; i += 1) {
+        const item = results[i];
+        const price = `\$${parseFloat(item.low_price).toFixed(2)}`;
+        cards.push({
+          'title': item.game.name,
+          'subtitle': `${item.platform.name}\nWatching for prices lower than ${price}`,
+          'image_url': item.game.image_url || 'https://yostikapp.com/site/images/yostik_full_logo.png',
+          'buttons': [{
+            'type': 'postback',
+            'title': 'Stop watching',
+            'payload': 'STOP_WATCHING_' + item.id
+          }],
+        });
+      }
+      facebook.sendTextMessage(config, messages.WATCHLIST_SHOW);
+      return facebook.sendGenericTemplate(config, cards);
+    }
+    return facebook.sendTextMessage(config, messages.WATCHLIST_EMPTY);
+  });
 };
 
 const sendUnsubscribeConfirmation = (config) => {
