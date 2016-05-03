@@ -20,30 +20,33 @@ app.get('/bot/messenger/v1/webhook', function (req, res) {
 });
 
 app.post('/bot/messenger/v1/webhook', function (req, res) {
-  const messaging_events = req.body.entry[0].messaging;
-  for (let i = 0; i < messaging_events.length; i++) {
-    const event = req.body.entry[0].messaging[i];
-    const config = {
-      sender_id: event.sender.id,
-      access_token: keys.access_token
-    };
-    const messageEvent = {
-      messenger_platform_id: 1,
-      external_user_id: config.sender_id,
-    };
-    if (event.message && event.message.text) {
-      messageEvent.external_message_id = event.message.mid;
-      messageEvent.type = 'message';
-      messageEvent.text = event.message.text;
-      logMessage(messageEvent);
-      parseQuery(event.message.text, config);
-    }
-    if (event.postback && event.postback.payload) {
-      messageEvent.external_message_id = 'pid.' + event.timestamp; // Making this up, there's no ID for a postback
-      messageEvent.type = 'postback';
-      messageEvent.text = event.postback.payload;
-      logMessage(messageEvent);
-      parsePostback(event.postback.payload, config);
+  const entries = req.body.entry;
+  for (let i = 0; i < entries.length; i++) {
+    let messaging_events = entries[i].messaging;
+    for (let j = 0; j < messaging_events.length; j++) {
+      const event = messaging_events[j];
+      const config = {
+        sender_id: event.sender.id,
+        access_token: keys.access_token
+      };
+      const messageEvent = {
+        messenger_platform_id: 1,
+        external_user_id: config.sender_id,
+      };
+      if (event.message && event.message.text) {
+        messageEvent.external_message_id = event.message.mid;
+        messageEvent.type = 'message';
+        messageEvent.text = event.message.text;
+        logMessage(messageEvent);
+        parseQuery(event.message.text, config);
+      }
+      if (event.postback && event.postback.payload) {
+        messageEvent.external_message_id = 'pid.' + event.timestamp; // Making this up, there's no ID for a postback
+        messageEvent.type = 'postback';
+        messageEvent.text = event.postback.payload;
+        logMessage(messageEvent);
+        parsePostback(event.postback.payload, config);
+      }
     }
   }
   return res.sendStatus(200);
