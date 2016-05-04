@@ -1,11 +1,14 @@
 'use strict';
 
+const _ = require('lodash');
 const express = require('express');
 const bodyParser = require('body-parser');
 const keys = require('./.keys/facebook');
 const facebook = require('./src/facebook');
 const api = require('./src/api');
+const queryHelper = require('./src/queryHelper');
 const menus = require('./src/bot/menus');
+const onboarding = require('./src/bot/onboarding');
 const messages = require('./src/constants/messages');
 
 const app = express();
@@ -37,15 +40,19 @@ app.post('/bot/messenger/v1/webhook', function (req, res) {
         messageEvent.external_message_id = event.message.mid;
         messageEvent.type = 'message';
         messageEvent.text = event.message.text;
-        logMessage(messageEvent);
-        parseQuery(event.message.text, config);
+        api.getOrCreateUser(config).then((user) => {
+          logMessage(messageEvent);
+          parseQuery(event.message.text, config, user);
+        });
       }
       if (event.postback && event.postback.payload) {
         messageEvent.external_message_id = 'pid.' + event.timestamp; // Making this up, there's no ID for a postback
         messageEvent.type = 'postback';
         messageEvent.text = event.postback.payload;
-        logMessage(messageEvent);
-        parsePostback(event.postback.payload, config);
+        api.getOrCreateUser(config).then((user) => {
+          logMessage(messageEvent);
+          parsePostback(event.postback.payload, config, user);
+        });
       }
     }
   }
@@ -161,7 +168,7 @@ function getSearchObject(query) {
   };
 }
 
-function parsePostback(text, config) {
+function parsePostback(text, config, user) {
   let match;
   match = text.match(/ADD_TO_WATCHLIST_(\d+)_(\d+)_(.+)/i);
   if (match && match[1] && match[2] && match[3]) {
@@ -191,7 +198,91 @@ function parsePostback(text, config) {
 
   match = text.match(/RETRY_SEARCH_FOR_QUERY_(.+)/i);
   if (match && match[1]) {
-    return parseQuery(`search ${match[1]}`, config);
+    return parseQuery(`search ${match[1]}`, config, user, { retrySearch: true });
+  }
+
+  match = text.match(/ADD_PLATFORM_(.+)/i);
+  if (match && match[1]) {
+    const isOnboarding = (user.data.reply_context && user.data.reply_context.indexOf('onboarding.') > -1);
+    const menuObj = (isOnboarding) ? onboarding : menus;
+    if (match[1] === 'OTHER') {
+      return (isOnboarding) ? onboarding.skipOther(config, user) : menus.otherPlatform(config, user);
+    }
+
+    return api.addPlatform(config, match[1])
+      .then((json) => menuObj.confirmAddPlatform(config, user, json.platform));
+  }
+
+  match = text.match(/REMOVE_PLATFORM_(.+)/i);
+  const isOnboarding = (user.data.reply_context && user.data.reply_context.indexOf('onboarding.') > -1);
+  const menuObj = (isOnboarding) ? onboarding : menus;
+  if (match && match[1]) {
+    return api.removePlatform(config, match[1])
+      .then((json) => menuObj.confirmRemovePlatform(config, user));
+  }
+
+  match = text.match(/ADD_ANOTHER_PLATFORM_(.+)/i);
+  if (match && match[1]) {
+    const isOnboarding = (user.data.reply_context && user.data.reply_context.indexOf('onboarding.') > -1);
+    if (match[1] === 'YES') {
+      // I use this method because it's the same message and cards, but
+      // the method should have a better name...
+      return (isOnboarding) ? onboarding.cancelSkip(config, user) : menus.sendPlatformsMenu(config, user);
+    }
+
+    if (match[1] === 'NO') {
+      if (!isOnboarding) {
+        return menus.exitSettings(config, user);
+      }
+      const hasSonyPlatform = _.some(user.data.platforms, (p) => (p.id >= 1 && p.id <= 3));
+      if (hasSonyPlatform) {
+        return onboarding.askPlus(config, user);
+      }
+      return onboarding.doFinish(config, user);
+    }
+  }
+
+  if (text === 'ONBOARDING_COOL') {
+    return onboarding.step1(config, user);
+  }
+
+  if (text === 'ONBOARDING_SKIP_YES') {
+    return onboarding.doSkip(config, user);
+  }
+
+  if (text === 'ONBOARDING_SKIP_NO') {
+    return onboarding.cancelSkip(config, user);
+  }
+
+  if (text === 'ONBOARDING_PLUS_YES') {
+    return api.updatePlus(config, true)
+      .then((json) => onboarding.doFinish(config, user));
+  }
+
+  if (text === 'ONBOARDING_PLUS_NO') {
+    return onboarding.doFinish(config, user);
+  }
+
+  if (text === 'GO_TO_SETTINGS') {
+    return menus.sendSettingsMenu(config, user);
+  }
+
+  if (text === 'GO_TO_WATCHLIST') {
+    return menus.sendWatchlist(config);
+  }
+
+  if (text === 'GO_TO_PLATFORMS') {
+    return menus.sendPlatformsMenu(config, user);
+  }
+
+  if (text === 'PLUS_ENABLE') {
+    return api.updatePlus(config, true)
+      .then((json) => menus.confirmPlusEnabled(config, user));
+  }
+
+  if (text === 'PLUS_DISABLE') {
+    return api.updatePlus(config, false)
+      .then((json) => menus.confirmPlusDisabled(config, user));
   }
 }
 
@@ -204,7 +295,15 @@ function parseSearchGame(query) {
   return false;
 }
 
-function parseQuery(query, config) {
+function parseQuery(query, config, user, options) {
+  if (user.isNew) {
+    // This is the first message we receive from this user.
+    // Start the onboarding process
+    return onboarding.onboard(config, user);
+  }
+  if (user.data.reply_context) {
+    return handleContext(config, user, user.data.reply_context, query);
+  }
   const cleanQuery = query.toLowerCase().trim();
   const cleanAndNormalizedQuery = cleanQuery.replace(/[^a-zA-Z0-9]+/g, '');
   switch (cleanAndNormalizedQuery) {
@@ -229,6 +328,8 @@ function parseQuery(query, config) {
       return menus.randomHate(config);
     case 'help': case 'helpme': case 'helpmeyostik': case 'ineedhelp':
       return menus.sendHelpMenu(config);
+    case 'settings':
+      return menus.sendSettingsMenu(config, user);
     case 'watchlist': case 'unsubscribe': case 'stop':
       return menus.sendWatchlist(config);
       // return menus.sendUnsubscribeConfirmation(config);
@@ -241,29 +342,44 @@ function parseQuery(query, config) {
   // Check if it's a game search
   searchObject = parseSearchGame(cleanQuery);
   if (searchObject !== false) {
-    return searchDeal(searchObject, config);
+    return searchDeal(searchObject, config, user, options);
   }
 
   // Check if it's an implicit game search
   searchObject = parseSearchGame(`search ${cleanQuery}`);
   if (searchObject !== false) {
-    return searchDeal(searchObject, config);
+    return searchDeal(searchObject, config, user, options);
   }
 
   return facebook.sendTextMessage(config, messages.UNRECOGNIZED_QUERY);
 };
 
-function searchDeal(searchObject, config) {
-  return api.search(searchObject.game, searchObject.platform)
+function searchDeal(searchObject, config, user, options) {
+  let platformsToSearch;
+  if (searchObject.platform) {
+    platformsToSearch = [searchObject.platform];
+  } else if (options && options.retrySearch === true) {
+    platformsToSearch = null;
+  } else if (user.data && user.data.platforms) {
+    platformsToSearch = user.data.platforms.map((p) => p.id);
+  }
+  return api.search(searchObject.game, platformsToSearch)
     .then((json) => {
       const results = json.results;
+      const userHasPlus = (user.data.has_plus);
       if (results.length > 0) {
         let cards = [];
         for(let i = 0; i < results.length; i += 1) {
           const deal = results[i];
-          const lowestPrice = deal.deal_price || deal.normal_price;
+          const hasPlusPrice = (deal.plus_price !== null && deal.plus_discount_percent !== null);
+          const useLowPrice = (userHasPlus && hasPlusPrice) ? deal.plus_price : deal.deal_price;
+          const lowestPrice = useLowPrice || deal.normal_price;
           let price = `\$${parseFloat(lowestPrice).toFixed(2)}`;
-          price += (deal.discount_percent) ? ` | ${deal.discount_percent}% OFF!` : '';
+          if (userHasPlus && hasPlusPrice) {
+            price += ` | ${deal.plus_discount_percent}% OFF with PS Plus!`;
+          } else {
+            price += (deal.discount_percent) ? ` | ${deal.discount_percent}% OFF!` : '';
+          }
           cards.push({
             'title': deal.title,
             'subtitle': `${platformsIdMap[deal.platform_id]} | ${price}\n${storesMap[deal.store_id]}`,
@@ -279,21 +395,76 @@ function searchDeal(searchObject, config) {
             }],
           });
         }
-        facebook.sendTextMessage(config, messages.GAME_FOUND);
-        facebook.sendGenericTemplate(config, cards);
+        return facebook.sendTextMessage(config, messages.GAME_FOUND)
+          .then(() => facebook.sendGenericTemplate(config, cards));
       } else {
-        if(searchObject.platform) {
+        if(platformsToSearch) {
           const button = {
             'type': 'postback',
             'title': messages.TRY_ANOTHER_PLATFORM,
             'payload': 'RETRY_SEARCH_FOR_QUERY_' + searchObject.game
           };
-          facebook.sendButtonMessage(config, messages.GAME_NOT_FOUND + searchObject.game + ' for ' + platformsIdMap[searchObject.platform], [button]);
+          return facebook.sendButtonMessage(config, messages.GAME_NOT_FOUND_FOR_PLATFORM(searchObject.game), [button]);
         } else {
-          facebook.sendTextMessage(config, messages.GAME_NOT_FOUND + searchObject.game);
+          return facebook.sendTextMessage(config, messages.GAME_NOT_FOUND(searchObject.game));
         }
       }
     });
+}
+
+function handleContext(config, user, context, query) {
+  if (context === 'onboarding.cool') {
+    return onboarding.step1(config, user);
+  }
+
+  if (context === 'onboarding.skip') {
+    return onboarding.skip(config, user);
+  }
+
+  if (context === 'onboarding.skip.confirm') {
+    if (queryHelper.isAffirmative(query)) {
+      return onboarding.doSkip(config, user);
+    }
+
+    if (queryHelper.isNegative(query)) {
+      return onboarding.cancelSkip(config, user);
+    }
+
+    // By default, ask again
+    return onboarding.skip(config, user);
+  }
+
+  if (context === 'onboarding.add_another_platform.confirm') {
+    if (queryHelper.isAffirmative(query)) {
+      return onboarding.cancelSkip(config, user);
+    }
+
+    // By default, consider negative
+    const hasSonyPlatform = _.some(user.data.platforms, (p) => (p.id >= 1 && p.id <= 3));
+    if (hasSonyPlatform) {
+      return onboarding.askPlus(config, user);
+    }
+    return onboarding.doFinish(config, user);
+  }
+
+  if (context === 'onboarding.plus.confirm') {
+    if (queryHelper.isAffirmative(query)) {
+      return api.updatePlus(config, true)
+        .then((json) => onboarding.doFinish(config, user));
+    }
+
+    // By default, consider negative
+    return onboarding.doFinish(config, user);
+  }
+
+  if (context === 'settings.add_another_platform.confirm') {
+    if (queryHelper.isAffirmative(query)) {
+      return menus.sendPlatformsMenu(config, user);
+    }
+
+    // By default, consider negative
+    return menus.exitSettings(config, user);
+  }
 }
 
 app.listen(8123, '0.0.0.0', function () {

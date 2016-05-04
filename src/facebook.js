@@ -1,15 +1,16 @@
 'use strict';
 
-const request = require('request');
+const fetch = require('node-fetch');
+const api = require('./api');
 
-function sendTextMessage(config, text) {
+function sendTextMessage(config, text, replyContext) {
   const messageData = {
     text: text
   };
-  sendMessage(config, messageData);
+  return sendMessage(config, messageData, replyContext);
 }
 
-function sendButtonMessage(config, text, buttons) {
+function sendButtonMessage(config, text, buttons, replyContext) {
   const messageData = {
     'attachment': {
       'type': 'template',
@@ -20,10 +21,10 @@ function sendButtonMessage(config, text, buttons) {
       }
     }
   };
-  sendMessage(config, messageData);
+  return sendMessage(config, messageData, replyContext);
 }
 
-function sendGenericTemplate(config, cards) {
+function sendGenericTemplate(config, cards, replyContext) {
   const messageData = {
     "attachment": {
       "type": "template",
@@ -33,25 +34,28 @@ function sendGenericTemplate(config, cards) {
       }
     }
   };
-  sendMessage(config, messageData);
+  return sendMessage(config, messageData, replyContext);
 }
 
-function sendMessage(config, messageData) {
-  request({
-    url: 'https://graph.facebook.com/v2.6/me/messages',
-    qs: { access_token: config['access_token'] },
+function sendMessage(config, messageData, replyContext) {
+  return fetch('https://graph.facebook.com/v2.6/me/messages?access_token=' + config['access_token'], {
     method: 'POST',
-    json: {
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
       recipient: { id: config['sender_id'] },
-      message: messageData,
+      message: messageData
+    })
+  })
+  .then((res) => res.json())
+  .then(() => {
+    if (replyContext !== undefined) {
+      return api.setReplyContext(config, replyContext);
     }
-  }, function(error, response, body) {
-    if (error) {
-      console.log('Error sending message: ', error);
-    } else if (response.body.error) {
-      console.log('Error: ', response.body.error);
-    }
-  });
+    return this;
+  })
+  .catch((err) => console.log('Error sending message: ', err));
 }
 
 module.exports = {

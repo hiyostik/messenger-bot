@@ -2,10 +2,15 @@
 
 const fetch = require('node-fetch');
 
-const search = (title, platform, limit) => {
+const getOrCreateUser = (config) => {
+  const url = `http://localhost:8000/api/v1/user/1/${config.sender_id}?access_token=${config.access_token}`;
+  return fetch(url, { method: 'GET' }).then((res) => res.json());
+}
+
+const search = (title, platforms, limit) => {
   let url = `http://localhost:8000/api/v1/search?title=${title}&limit=${limit || 10}`;
-  if (platform) {
-    url += `&platform=${platform}`;
+  if (platforms) {
+    url += platforms.map((p) => `&platform[]=${p}`).join('');
   }
   return fetch(url).then((res) => res.json());
 }
@@ -25,15 +30,40 @@ const removeFromWatchlist = (watchlistItem) => {
   return fetch(url, { method: 'POST', body: JSON.stringify(watchlistItem) }).then((res) => res.json());
 }
 
-const getWatchlist = (userId) => {
-  const url = `http://localhost:8000/api/v1/watchlist/1/${userId}`;
+const getWatchlist = (externalUserId) => {
+  const url = `http://localhost:8000/api/v1/watchlist/1/${externalUserId}`;
   return fetch(url, { method: 'GET' }).then((res) => res.json());
 }
 
+const setReplyContext = (config, replyContext) => {
+  const url = `http://localhost:8000/api/v1/reply-context/1/${config.sender_id}?access_token=${config.access_token}`;
+  return fetch(url, { method: 'POST', body: JSON.stringify({reply_context: replyContext}) }).then((res) => res.json());
+}
+
+const addPlatform = (config, platformId) => {
+  const url = `http://localhost:8000/api/v1/add-platform/1/${config.sender_id}?access_token=${config.access_token}`;
+  return fetch(url, { method: 'POST', body: JSON.stringify({platform_id: platformId}) }).then((res) => res.json());
+}
+
+const removePlatform = (config, platformId) => {
+  const url = `http://localhost:8000/api/v1/remove-platform/1/${config.sender_id}?access_token=${config.access_token}`;
+  return fetch(url, { method: 'POST', body: JSON.stringify({platform_id: platformId}) }).then((res) => res.json());
+}
+
+const updatePlus = (config, hasPlus) => {
+  const url = `http://localhost:8000/api/v1/update-plus/1/${config.sender_id}?access_token=${config.access_token}`;
+  return fetch(url, { method: 'POST', body: JSON.stringify({has_plus: hasPlus}) }).then((res) => res.json());
+}
+
 module.exports = {
+  getOrCreateUser,
   search,
   logMessage,
   addToWatchlist,
   removeFromWatchlist,
-  getWatchlist
+  getWatchlist,
+  setReplyContext,
+  addPlatform,
+  removePlatform,
+  updatePlus
 };
