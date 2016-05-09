@@ -74,7 +74,7 @@ app.post('/bot/messenger/v1/notify/:id', function (req, res) {
     for(let i = 0; i < limit; i += 1) {
       const deal = json[i];
       const lowestPrice = deal.lowest_price;
-      let price = `\$${parseFloat(lowestPrice).toFixed(2)}`;
+      let price = (lowestPrice > 0) ? `\$${parseFloat(lowestPrice).toFixed(2)}` : `FREE`;
       price += (deal.discount_percent) ? ` | ${deal.discount_percent}% OFF!` : '';
       cards.push({
         'title': deal.title,
@@ -373,8 +373,8 @@ function searchDeal(searchObject, config, user, options) {
           const deal = results[i];
           const hasPlusPrice = (deal.plus_price !== null && deal.plus_discount_percent !== null);
           const useLowPrice = (userHasPlus && hasPlusPrice) ? deal.plus_price : deal.deal_price;
-          const lowestPrice = useLowPrice || deal.normal_price;
-          let price = `\$${parseFloat(lowestPrice).toFixed(2)}`;
+          const lowestPrice = (useLowPrice === 0) ? useLowPrice : useLowPrice || deal.normal_price;
+          let price = (lowestPrice > 0) ? `\$${parseFloat(lowestPrice).toFixed(2)}` : 'FREE';
           if (userHasPlus && hasPlusPrice) {
             price += ` | ${deal.plus_discount_percent}% OFF with PS Plus!`;
           } else {
