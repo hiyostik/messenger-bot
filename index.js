@@ -314,6 +314,7 @@ function parseQuery(query, config, user, options) {
     case 'thanksyostik': case 'thankyouyostik': case 'tyyostik':
     case 'yourethebest': case 'yourthebest':
       return menus.randomYoureWelcome(config);
+    case 'loveyou': case 'loveu':
     case 'iloveyou': case 'iloveu':
     case 'iloveyouyostik': case 'iloveuyostik':
       return menus.randomLove(config, 'love');

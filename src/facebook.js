@@ -1,5 +1,6 @@
 'use strict';
 
+const JSONbig = require('json-bigint');
 const fetch = require('node-fetch');
 const api = require('./api');
 
@@ -43,7 +44,7 @@ function sendMessage(config, messageData, replyContext) {
     headers: {
       'Content-Type': 'application/json'
     },
-    body: JSON.stringify({
+    body: JSONbig.stringify({
       recipient: { id: config['sender_id'] },
       message: messageData
     })
