@@ -1,7 +1,6 @@
 'use strict';
 
 const fetch = require('node-fetch');
-const JSONbig = require('json-bigint');
 
 const getOrCreateUser = (config) => {
   const url = `http://localhost:8000/api/v1/user/1/${config.sender_id}?access_token=${config.access_token}`;
@@ -18,17 +17,17 @@ const search = (title, platforms, limit) => {
 
 const logMessage = (messageEvent) => {
   const url = `http://localhost:8000/api/v1/logmessage`;
-  return fetch(url, { method: 'POST', body: JSONbig.stringify(messageEvent) }).then((res) => res.json());
+  return fetch(url, { method: 'POST', body: JSON.stringify(messageEvent) }).then((res) => res.json());
 }
 
 const addToWatchlist = (watchlistItem) => {
   const url = `http://localhost:8000/api/v1/watchlist`;
-  return fetch(url, { method: 'POST', body: JSONbig.stringify(watchlistItem) }).then((res) => res.json());
+  return fetch(url, { method: 'POST', body: JSON.stringify(watchlistItem) }).then((res) => res.json());
 }
 
 const removeFromWatchlist = (watchlistItem) => {
   const url = `http://localhost:8000/api/v1/watchlist-remove`;
-  return fetch(url, { method: 'POST', body: JSONbig.stringify(watchlistItem) }).then((res) => res.json());
+  return fetch(url, { method: 'POST', body: JSON.stringify(watchlistItem) }).then((res) => res.json());
 }
 
 const getWatchlist = (externalUserId) => {
@@ -38,22 +37,22 @@ const getWatchlist = (externalUserId) => {
 
 const setReplyContext = (config, replyContext) => {
   const url = `http://localhost:8000/api/v1/reply-context/1/${config.sender_id}?access_token=${config.access_token}`;
-  return fetch(url, { method: 'POST', body: JSONbig.stringify({reply_context: replyContext}) }).then((res) => res.json());
+  return fetch(url, { method: 'POST', body: JSON.stringify({reply_context: replyContext}) }).then((res) => res.json());
 }
 
 const addPlatform = (config, platformId) => {
   const url = `http://localhost:8000/api/v1/add-platform/1/${config.sender_id}?access_token=${config.access_token}`;
-  return fetch(url, { method: 'POST', body: JSONbig.stringify({platform_id: platformId}) }).then((res) => res.json());
+  return fetch(url, { method: 'POST', body: JSON.stringify({platform_id: platformId}) }).then((res) => res.json());
 }
 
 const removePlatform = (config, platformId) => {
   const url = `http://localhost:8000/api/v1/remove-platform/1/${config.sender_id}?access_token=${config.access_token}`;
-  return fetch(url, { method: 'POST', body: JSONbig.stringify({platform_id: platformId}) }).then((res) => res.json());
+  return fetch(url, { method: 'POST', body: JSON.stringify({platform_id: platformId}) }).then((res) => res.json());
 }
 
 const updatePlus = (config, hasPlus) => {
   const url = `http://localhost:8000/api/v1/update-plus/1/${config.sender_id}?access_token=${config.access_token}`;
-  return fetch(url, { method: 'POST', body: JSONbig.stringify({has_plus: hasPlus}) }).then((res) => res.json());
+  return fetch(url, { method: 'POST', body: JSON.stringify({has_plus: hasPlus}) }).then((res) => res.json());
 }
 
 module.exports = {
