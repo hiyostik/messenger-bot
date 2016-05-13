@@ -3,6 +3,7 @@
 const _ = require('lodash');
 const express = require('express');
 const bodyParser = require('body-parser');
+const JSONbig = require('json-bigint');
 const keys = require('./.keys/facebook');
 const facebook = require('./src/facebook');
 const api = require('./src/api');
@@ -13,7 +14,28 @@ const messages = require('./src/constants/messages');
 
 const app = express();
 
-app.use(bodyParser.json());
+// app.use(bodyParser.json());
+app.use(function(req, res, next){
+  if (req.method == 'POST') {
+    var body = '';
+
+    req.on('data', function (data) {
+      body += data;
+
+      // Too much POST data, kill the connection!
+      // 1e6 === 1 * Math.pow(10, 6) === 1 * 1000000 ~~~ 1MB
+      if (body.length > 1e6)
+        req.connection.destroy();
+    });
+
+    req.on('end', function () {
+      // console.log(body); // should work
+        // use post['blah'], etc.
+      req.body = JSONbig.parse(body)
+      next()
+    });
+  }
+});
 
 app.get('/bot/messenger/v1/webhook', function (req, res) {
   if (req.query['hub.verify_token'] === keys['verify_token']) {
