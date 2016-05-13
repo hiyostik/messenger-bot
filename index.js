@@ -51,7 +51,7 @@ app.post('/bot/messenger/v1/webhook', function (req, res) {
     for (let j = 0; j < messaging_events.length; j++) {
       const event = messaging_events[j];
       const config = {
-        sender_id: event.sender.id,
+        sender_id: event.sender.id.toString(),
         access_token: keys.access_token
       };
       const messageEvent = {
